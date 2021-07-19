@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "terra-ltv-bot"
+version = "0.1.0"
+description = ""
+authors = ["etienne-napoleone <etienne.napoleone@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+aiogram = "^2.14.3"
+terra-sdk = "^0.14.0"
+beanie = "^1.2.4"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+flake8 = "^3.9.2"
+black = "^21.6b0"
+mypy = "^0.910"
+coverage = "^5.5"
+rope = "^0.19.0"
+isort = "^5.9.2"
+
+[tool.poetry.scripts]
+terra-ltv-bot = "terra_ltv_bot.cli:entrypoint"
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
