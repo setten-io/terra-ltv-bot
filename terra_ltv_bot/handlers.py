@@ -7,7 +7,7 @@ from aiogram.utils.exceptions import Throttled
 from beanie.operators import All
 
 from .models import Address
-from .terra import Terra, FINDER_URL
+from .terra import FINDER_URL, Terra
 from .utils import is_account_address
 
 log = logging.getLogger(__name__)

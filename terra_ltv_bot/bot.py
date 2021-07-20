@@ -1,9 +1,9 @@
-import motor
 import aioredis
+import motor
 from aiogram import Bot as TelegramBot
 from aiogram import types
-from aiogram.dispatcher import Dispatcher
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from aiogram.dispatcher import Dispatcher
 from aiogram.utils import executor
 from beanie import init_beanie
 from terra_sdk.client.lcd.lcdclient import AsyncLCDClient
