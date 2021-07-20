@@ -18,6 +18,5 @@ COPY terra_ltv_bot ./terra_ltv_bot
 
 RUN poetry install --no-dev --no-interaction
 
-
 ENTRYPOINT [ "poetry", "run" ]
 CMD [ "terra-ltv-bot" ]

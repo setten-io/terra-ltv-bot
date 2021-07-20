@@ -38,6 +38,8 @@ class Handlers:
             "\n\n"
             "made with ♥ by Terra validator "
             "<a href='https://terra.setten.io/'>setten.io</a>"
+            " - "
+            "<a href='https://github.com/setten-io/terra-ltv-bot'>source</a>"
         )
 
     async def subscribe(self, message: types.Message) -> None:
