@@ -65,7 +65,10 @@ class Handlers:
                 address = await Address.get_or_create(account_address)
                 if user_id in address.subscribers:
                     address.subscribers.remove(user_id)
-                    await address.save()
+                    if not address.subscribers:
+                        await address.delete()
+                    else:
+                        await address.save()
                     await message.reply(f"unsubscribed from:\n`{account_address}`")
                 else:
                     await message.reply(f"not subscribed to:\n`{account_address}`")
