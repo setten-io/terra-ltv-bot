@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 from aiogram import types
@@ -46,8 +47,13 @@ class Handlers:
         log.info(f"@{message.from_user.username} {message.get_args()}")
         user_id = message.from_user.id
         reply = ""
-        async for result in Address.find(All(Address.subscribers, [user_id])):
-            reply += f"`{result.account_address}`\n"
+        addresses = await Address.find(All(Address.subscribers, [user_id])).to_list()
+        ltvs = await asyncio.gather(
+            *[self.terra.ltv(address.account_address) for address in addresses]
+        )
+        for index, address in enumerate(addresses):
+            ltv = str(ltvs[index]).replace(".", "\.")  # noqa: W605
+            reply += f"`{address.account_address}` {ltv if ltv else '-'}%\n"
         await message.reply(reply or "not subscribed to any address")
 
     async def remove(self, message: types.Message) -> None:
@@ -75,7 +81,7 @@ class Handlers:
             if is_account_address(account_address):
                 ltv = await self.terra.ltv(account_address)
                 ltv_formated = str(ltv).replace(".", "\.")  # noqa: W605
-                await message.reply(f"{ltv_formated}%")
+                await message.reply(f"{ltv_formated}%" if ltv else "no loan found")
             else:
                 await message.reply(f"invalid account address:\n`{account_address}`")
         else:
