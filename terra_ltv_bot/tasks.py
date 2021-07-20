@@ -45,7 +45,7 @@ class Tasks:
         self.alerted = Cache(ttl=timedelta(hours=2))
         dp._loop_create_task(self.check_ltv_ratio())
 
-    @every(5)
+    @every(5 * 60)
     @skip_exceptions
     async def check_ltv_ratio(self) -> None:
         log.debug("checking ltv ratios")
