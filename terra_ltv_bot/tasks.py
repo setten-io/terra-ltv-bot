@@ -57,7 +57,7 @@ class Tasks:
         for index, ltv in enumerate(ltvs):
             address = addresses[index]
             if ltv >= 35:
-                log.info(f"{address.account_address} {ltv}% alerting")
+                log.debug(f"{address.account_address} {ltv}% alerting")
                 await asyncio.gather(
                     *[
                         self.notify(address.account_address, subscriber, ltv)
@@ -75,6 +75,6 @@ class Tasks:
                 f"🚨 LTV is unsafe ({ltv}%) for:\n<pre>{account_address}</pre>",
             )
             self.alerted.set(key, True)
-            log.debug(f"{account_address} {telegram_id} notified")
+            log.info(f"{account_address} {telegram_id} notified")
         else:
             log.debug(f"{account_address} {telegram_id} muted")
