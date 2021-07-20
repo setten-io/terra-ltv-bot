@@ -70,10 +70,9 @@ class Tasks:
     async def notify(self, account_address: str, telegram_id: int, ltv: float) -> None:
         key = f"{account_address}:{telegram_id}"
         if not self.alerted.get(key):
-            ltv_formated = str(ltv).replace(".", "\.")  # noqa: W605
             await self.bot.send_message(
                 telegram_id,
-                f"🚨 LTV is at {ltv_formated}% for:\n`{account_address}`",
+                f"🚨 LTV is unsafe ({ltv}%) for:\n<pre>{account_address}</pre>",
             )
             self.alerted.set(key, True)
             log.debug(f"{account_address} {telegram_id} notified")

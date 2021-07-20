@@ -17,17 +17,30 @@ class Handlers:
     def __init__(self, dp: Dispatcher, terra: Terra) -> None:
         self.dp = dp
         self.terra = terra
-        dp.register_message_handler(self.start, commands=["start"])
-        dp.register_message_handler(self.add, commands=["add"])
+        dp.register_message_handler(self.start, commands=["start", "help"])
+        dp.register_message_handler(self.subscribe, commands=["subscribe"])
         dp.register_message_handler(self.list_, commands=["list"])
-        dp.register_message_handler(self.remove, commands=["remove"])
+        dp.register_message_handler(self.unsubscribe, commands=["unsubscribe"])
         dp.register_message_handler(self.ltv, commands=["ltv"])
 
     async def start(self, message: types.Message) -> None:
         log.info(f"@{message.from_user.username} {message.get_args()}")
-        await message.reply("todo")
+        await message.reply(
+            "Terra LTV bot lets you subscribe to Terra addresses and receive "
+            "alerts when they are close to liquidation on a spcific protocol.\n"
+            "Currently only supports Anchor loans.\n"
+            "\n"
+            "/help\nDisplay this message.\n\n"
+            "/subscribe account_address\nSubscribe to an address LTV alerts.\n\n"
+            "/list\nList all subscribed addresses and their current LTV.\n\n"
+            "/unsubscribe account_address\nUnsubscribe to an address LTV alerts.\n\n"
+            "/ltv account_address\nRetreive LTV for an arbitrary address."
+            "\n\n"
+            "made with ♥ by Terra validator "
+            "<a href='https://terra.setten.io/'>setten.io</a>"
+        )
 
-    async def add(self, message: types.Message) -> None:
+    async def subscribe(self, message: types.Message) -> None:
         try:
             await self.dp.throttle("add", rate=1)
         except Throttled:
@@ -41,15 +54,17 @@ class Handlers:
                     address = await Address.get_or_create(account_address)
                     if user_id in address.subscribers:
                         await message.reply(
-                            f"already subscribed to:\n`{account_address}`"
+                            f"already subscribed to:\n<pre>{account_address}</pre>"
                         )
                     else:
                         address.subscribers.append(user_id)
                         await address.save()
-                        await message.reply(f"subscribed to:\n`{account_address}`")
+                        await message.reply(
+                            f"subscribed to:\n<pre>{account_address}</pre>"
+                        )
                 else:
                     await message.reply(
-                        f"invalid account address:\n`{account_address}`"
+                        f"invalid account address:\n<pre>{account_address}</pre>"
                     )
             else:
                 await message.reply("invalid format")
@@ -70,11 +85,11 @@ class Handlers:
                 *[self.terra.ltv(address.account_address) for address in addresses]
             )
             for index, address in enumerate(addresses):
-                ltv = str(ltvs[index]).replace(".", "\.")  # noqa: W605
-                reply += f"`{address.account_address}` {ltv if ltv else '-'}%\n"
+                ltv = str(ltvs[index])
+                reply += f"<pre>{address.account_address}<pre> {ltv if ltv else '-'}%\n"
             await message.reply(reply or "not subscribed to any address")
 
-    async def remove(self, message: types.Message) -> None:
+    async def unsubscribe(self, message: types.Message) -> None:
         try:
             await self.dp.throttle("add", rate=1)
         except Throttled:
@@ -92,12 +107,16 @@ class Handlers:
                             await address.delete()
                         else:
                             await address.save()
-                        await message.reply(f"unsubscribed from:\n`{account_address}`")
+                        await message.reply(
+                            f"unsubscribed from:\n<pre>{account_address}</pre>"
+                        )
                     else:
-                        await message.reply(f"not subscribed to:\n`{account_address}`")
+                        await message.reply(
+                            f"not subscribed to:\n<pre>{account_address}</pre>"
+                        )
                 else:
                     await message.reply(
-                        f"invalid account address:\n`{account_address}`"
+                        f"invalid account address:\n<pre>{account_address}</pre>"
                     )
             else:
                 await message.reply("invalid format")
@@ -113,11 +132,10 @@ class Handlers:
             if account_address:
                 if is_account_address(account_address):
                     ltv = await self.terra.ltv(account_address)
-                    ltv_formated = str(ltv).replace(".", "\.")  # noqa: W605
-                    await message.reply(f"{ltv_formated}%" if ltv else "no loan found")
+                    await message.reply(f"{ltv}%" if ltv else "no loan found")
                 else:
                     await message.reply(
-                        f"invalid account address:\n`{account_address}`"
+                        f"invalid account address:\n<pre>{account_address}</pre>"
                     )
             else:
                 await message.reply("invalid format")

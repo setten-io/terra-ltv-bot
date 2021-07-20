@@ -16,9 +16,7 @@ from .terra import Terra
 
 class Bot:
     def __init__(self, config: Config) -> None:
-        self.bot = TelegramBot(
-            token=config.bot_token, parse_mode=types.ParseMode.MARKDOWN_V2
-        )
+        self.bot = TelegramBot(token=config.bot_token, parse_mode=types.ParseMode.HTML)
         self.dp = Dispatcher(self.bot, storage=MemoryStorage())
         self.terra = Terra(
             AsyncLCDClient(url=config.lcd_url, chain_id=config.chain_id),
