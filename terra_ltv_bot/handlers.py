@@ -84,7 +84,7 @@ class Handlers:
                 else:
                     await message.reply("invalid account address")
             else:
-                await message.reply("invalid format")
+                await message.reply("invalid format, missing account address")
 
     async def list_(self, message: types.Message) -> None:
         try:
@@ -155,7 +155,7 @@ class Handlers:
                 else:
                     await message.reply("invalid account address")
             else:
-                await message.reply("invalid format")
+                await message.reply("invalid format, missing account address")
 
     async def ltv(self, message: types.Message) -> None:
         try:
@@ -172,4 +172,4 @@ class Handlers:
                 else:
                     await message.reply("invalid account address")
             else:
-                await message.reply("invalid format")
+                await message.reply("invalid format, missing account address")
