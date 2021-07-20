@@ -15,10 +15,10 @@ from .terra import Terra
 
 class Bot:
     def __init__(self, config: Config) -> None:
-        self.dp = Dispatcher(
-            TelegramBot(token=config.bot_token, parse_mode=types.ParseMode.MARKDOWN_V2)
+        self.bot = TelegramBot(
+            token=config.bot_token, parse_mode=types.ParseMode.MARKDOWN_V2
         )
-
+        self.dp = Dispatcher(self.bot)
         self.terra = Terra(
             AsyncLCDClient(url=config.lcd_url, chain_id=config.chain_id),
             anchor_market_contract="terra1sepfj7s0aeg5967uxnfk4thzlerrsktkpelm5s",
@@ -34,7 +34,7 @@ class Bot:
             document_models=all_models,
         )
         Handlers(dp, self.terra)
-        Tasks(dp, self.terra)
+        Tasks(dp, self.bot, self.terra)
 
     async def on_shutdown(self, dp: Dispatcher):
         pass

@@ -1,9 +1,12 @@
 import asyncio
+from datetime import timedelta
 import logging
 from functools import wraps
 from typing import Callable
 
+from aiogram import Bot
 from aiogram.dispatcher import Dispatcher
+from poche import Cache
 
 from .models import Address
 from .terra import Terra
@@ -36,20 +39,43 @@ def skip_exceptions(f: Callable) -> Callable:
 
 
 class Tasks:
-    def __init__(self, dp: Dispatcher, terra: Terra) -> None:
+    def __init__(self, dp: Dispatcher, bot: Bot, terra: Terra) -> None:
+        self.bot = bot
         self.terra = terra
-        dp._loop_create_task(self.check_loans_to_values())
+        self.alerted = Cache(ttl=timedelta(hours=2))
+        dp._loop_create_task(self.check_ltv_ratio())
 
-    @every(60 * 5)
+    @every(5)
     @skip_exceptions
-    async def check_loans_to_values(self) -> None:
+    async def check_ltv_ratio(self) -> None:
+        log.debug("checking ltv ratios")
         tasks = []
         addresses = await Address.find_all().to_list()
         for result in addresses:
             tasks.append(asyncio.create_task(self.terra.ltv(result.account_address)))
         ltvs = await asyncio.gather(*tasks)
         for index, ltv in enumerate(ltvs):
+            address = addresses[index]
             if ltv >= 35:
-                print(addresses[index].account_address, "alert")
+                log.info(f"{address.account_address} {ltv}% alerting")
+                await asyncio.gather(
+                    *[
+                        self.notify(address.account_address, subscriber, ltv)
+                        for subscriber in address.subscribers
+                    ]
+                )
             else:
-                print(addresses[index].account_address, "ok")
+                log.debug(f"{address.account_address} {ltv}% not alerting")
+
+    async def notify(self, account_address: str, telegram_id: int, ltv: float) -> None:
+        key = f"{account_address}:{telegram_id}"
+        if not self.alerted.get(key):
+            ltv_formated = str(ltv).replace(".", "\.")  # noqa: W605
+            await self.bot.send_message(
+                telegram_id,
+                f"🚨 LTV is at {ltv_formated}% for:\n`{account_address}`",
+            )
+            self.alerted.set(key, True)
+            log.debug(f"{account_address} {telegram_id} notified")
+        else:
+            log.debug(f"{account_address} {telegram_id} muted")
