@@ -35,6 +35,21 @@ yarl = ">=1.0,<2.0"
 speedups = ["aiodns", "brotlipy", "cchardet"]
 
 [[package]]
+name = "aioredis"
+version = "2.0.0b1"
+description = "asyncio (PEP 3156) Redis support"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+async-timeout = "*"
+typing-extensions = "*"
+
+[package.extras]
+hiredis = ["hiredis (>=1.0)"]
+
+[[package]]
 name = "appdirs"
 version = "1.4.4"
 description = "A small Python module for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
@@ -341,14 +356,6 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 dev = ["pre-commit", "tox"]
 
 [[package]]
-name = "poche"
-version = "1.0.0"
-description = "Simple and fast Python in-memory caching library"
-category = "main"
-optional = false
-python-versions = ">=3.6,<4.0"
-
-[[package]]
 name = "py"
 version = "1.10.0"
 description = "library with cross-python path, ini-parsing, io, code, log facilities"
@@ -543,7 +550,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "ee5b67c8c55ad1847a5d616c96de2bda3d83c9cbb3a44b279d71122ef154bb46"
+content-hash = "a9e4e90f83b6d78d3bacbb3d6b1a3a7d6cc3a5ceced30fc776ea6dd305011849"
 
 [metadata.files]
 aiogram = [
@@ -588,6 +595,10 @@ aiohttp = [
     {file = "aiohttp-3.7.4.post0-cp39-cp39-win32.whl", hash = "sha256:932bb1ea39a54e9ea27fc9232163059a0b8855256f4052e776357ad9add6f1c9"},
     {file = "aiohttp-3.7.4.post0-cp39-cp39-win_amd64.whl", hash = "sha256:02f46fc0e3c5ac58b80d4d56eb0a7c7d97fcef69ace9326289fb9f1955e65cfe"},
     {file = "aiohttp-3.7.4.post0.tar.gz", hash = "sha256:493d3299ebe5f5a7c66b9819eacdcfbbaaf1a8e84911ddffcdc48888497afecf"},
+]
+aioredis = [
+    {file = "aioredis-2.0.0b1-py3-none-any.whl", hash = "sha256:ca2c17093c019f88e4c1483353d38e448f72e3f24ba4119efdcbfdcf42f10a43"},
+    {file = "aioredis-2.0.0b1.tar.gz", hash = "sha256:f1dbcfd6cd664e69dbd457b4ae3d658429d3ba1c2e68d493d3562203b703a25f"},
 ]
 appdirs = [
     {file = "appdirs-1.4.4-py2.py3-none-any.whl", hash = "sha256:a841dacd6b99318a741b166adb07e19ee71a274450e68237b4650ca1055ab128"},
@@ -810,10 +821,6 @@ pathspec = [
 pluggy = [
     {file = "pluggy-0.13.1-py2.py3-none-any.whl", hash = "sha256:966c145cd83c96502c3c3868f50408687b38434af77734af1e9ca461a4081d2d"},
     {file = "pluggy-0.13.1.tar.gz", hash = "sha256:15b2acde666561e1298d71b523007ed7364de07029219b604cf808bfa1c765b0"},
-]
-poche = [
-    {file = "poche-1.0.0-py3-none-any.whl", hash = "sha256:2ab3fb399045320c1aec4c218b74face358ea46fccadc05a1e7a949046d9c53e"},
-    {file = "poche-1.0.0.tar.gz", hash = "sha256:596469ba9e21fa3a3ef2a2d4e88fa3f3a3e41fa1a6e9987dd9449edfb679158a"},
 ]
 py = [
     {file = "py-1.10.0-py2.py3-none-any.whl", hash = "sha256:3b80836aa6d1feeaa108e046da6423ab8f6ceda6468545ae8d02d9d58d18818a"},

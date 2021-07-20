@@ -1,14 +1,20 @@
 version: '3'
 
 services:
-    mongo:
-        image: mongo
-        restart: always
-        ports:
-            - 27017:27017
+  mongo:
+    image: mongo
+    restart: always
+    ports:
+      - 27017:27017
 
-    mongo-express:
-        image: mongo-express
-        restart: always
-        ports:
-            - 8081:8081
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - 8081:8081
+
+  redis:
+    image: redis
+    restart: always
+    ports:
+      - 6379:6379

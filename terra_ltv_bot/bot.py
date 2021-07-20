@@ -1,4 +1,5 @@
 import motor
+import aioredis
 from aiogram import Bot as TelegramBot
 from aiogram import types
 from aiogram.dispatcher import Dispatcher
@@ -23,7 +24,10 @@ class Bot:
             anchor_market_contract=config.anchor_market_contract,
             anchor_overseer_contract=config.anchor_overseer_contract,
         )
-        self.db = motor.motor_asyncio.AsyncIOMotorClient().ltv
+        self.db = motor.motor_asyncio.AsyncIOMotorClient(
+            host=config.db_host, port=config.db_port
+        ).ltv
+        self.redis = aioredis.from_url(config.redis_url)
 
     async def on_startup(self, dp: Dispatcher):
         await init_beanie(
@@ -31,7 +35,7 @@ class Bot:
             document_models=all_models,
         )
         Handlers(dp, self.terra)
-        Tasks(dp, self.bot, self.terra)
+        Tasks(dp, self.bot, self.terra, self.redis)
 
     async def on_shutdown(self, dp: Dispatcher):
         pass

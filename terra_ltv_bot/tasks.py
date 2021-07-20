@@ -6,7 +6,7 @@ from typing import Callable
 
 from aiogram import Bot
 from aiogram.dispatcher import Dispatcher
-from poche import Cache
+from aioredis import Redis
 
 from .models import Address
 from .terra import Terra
@@ -39,10 +39,10 @@ def skip_exceptions(f: Callable) -> Callable:
 
 
 class Tasks:
-    def __init__(self, dp: Dispatcher, bot: Bot, terra: Terra) -> None:
+    def __init__(self, dp: Dispatcher, bot: Bot, terra: Terra, redis: Redis) -> None:
         self.bot = bot
         self.terra = terra
-        self.alerted = Cache(ttl=timedelta(hours=2))
+        self.redis = redis
         dp._loop_create_task(self.check_ltv_ratio())
 
     @every(5 * 60)
@@ -69,12 +69,12 @@ class Tasks:
 
     async def notify(self, account_address: str, telegram_id: int, ltv: float) -> None:
         key = f"{account_address}:{telegram_id}"
-        if not self.alerted.get(key):
+        if not await self.redis.get(key):
             await self.bot.send_message(
                 telegram_id,
                 f"🚨 {ltv}% LTV ratio:\n<pre>{account_address}</pre>",
             )
-            self.alerted.set(key, True)
+            await self.redis.set(key, int(True), ex=timedelta(hours=2))
             log.info(f"{account_address} {telegram_id} notified")
         else:
             log.debug(f"{account_address} {telegram_id} muted")

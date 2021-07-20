@@ -6,13 +6,19 @@ class Config:
     def __init__(
         self,
         bot_token: str,
+        db_host: str,
+        db_port: int,
+        redis_url: str,
         lcd_url: str,
         chain_id: str,
         anchor_market_contract: str,
         anchor_overseer_contract: str,
-        validator_address: Optional[str] = None,
+        validator_address: Optional[str],
     ) -> None:
         self.bot_token = bot_token
+        self.db_host = db_host
+        self.db_port = db_port
+        self.redis_url = redis_url
         self.lcd_url = lcd_url
         self.chain_id = chain_id
         self.anchor_market_contract = anchor_market_contract
@@ -23,6 +29,9 @@ class Config:
     def from_env(cls) -> "Config":
         return cls(
             os.environ["BOT_TOKEN"],
+            os.getenv("DB_HOST", "localhost"),
+            int(os.getenv("DB_PORT", "27017")),
+            os.getenv("REDIS_URL", "redis://localhost"),
             os.environ["LCD_URL"],
             os.environ["CHAIN_ID"],
             os.environ["ANCHOR_MARKET_CONTRACT"],
