@@ -7,7 +7,7 @@ from aiogram.utils.exceptions import Throttled
 from beanie.operators import All
 
 from .models import Address
-from .terra import Terra
+from .terra import Terra, FINDER_URL
 from .utils import is_account_address
 
 log = logging.getLogger(__name__)
@@ -54,18 +54,30 @@ class Handlers:
                     address = await Address.get_or_create(account_address)
                     if user_id in address.subscribers:
                         await message.reply(
-                            f"already subscribed to:\n<pre>{account_address}</pre>"
+                            "already subscribed to "
+                            "<a href='{}{}/address/{}'>{}...{}</a>".format(
+                                FINDER_URL,
+                                self.terra.lcd.chain_id,
+                                address.account_address,
+                                address.account_address[:13],
+                                address.account_address[-5:],
+                            )
                         )
                     else:
                         address.subscribers.append(user_id)
                         await address.save()
                         await message.reply(
-                            f"subscribed to:\n<pre>{account_address}</pre>"
+                            "subscribed to "
+                            "<a href='{}{}/address/{}'>{}...{}</a>".format(
+                                FINDER_URL,
+                                self.terra.lcd.chain_id,
+                                address.account_address,
+                                address.account_address[:13],
+                                address.account_address[-5:],
+                            )
                         )
                 else:
-                    await message.reply(
-                        f"invalid account address:\n<pre>{account_address}</pre>"
-                    )
+                    await message.reply("invalid account address")
             else:
                 await message.reply("invalid format")
 
@@ -86,8 +98,13 @@ class Handlers:
             )
             for index, address in enumerate(addresses):
                 ltv = str(ltvs[index])
-                reply += (
-                    f"<pre>{address.account_address}</pre> {ltv if ltv else '-'}%\n"
+                reply += "<a href='{}{}/address/{}'>{}...{}</a> {}%\n".format(
+                    FINDER_URL,
+                    self.terra.lcd.chain_id,
+                    address.account_address,
+                    address.account_address[:13],
+                    address.account_address[-5:],
+                    ltv if ltv else "-",
                 )
             await message.reply(reply or "not subscribed to any address")
 
@@ -110,16 +127,28 @@ class Handlers:
                         else:
                             await address.save()
                         await message.reply(
-                            f"unsubscribed from:\n<pre>{account_address}</pre>"
+                            "unsubscribed from "
+                            "<a href='{}{}/address/{}'>{}...{}</a>".format(
+                                FINDER_URL,
+                                self.terra.lcd.chain_id,
+                                address.account_address,
+                                address.account_address[:13],
+                                address.account_address[-5:],
+                            )
                         )
                     else:
                         await message.reply(
-                            f"not subscribed to:\n<pre>{account_address}</pre>"
+                            "not subscribed to "
+                            "<a href='{}{}/address/{}'>{}...{}</a>".format(
+                                FINDER_URL,
+                                self.terra.lcd.chain_id,
+                                address.account_address,
+                                address.account_address[:13],
+                                address.account_address[-5:],
+                            )
                         )
                 else:
-                    await message.reply(
-                        f"invalid account address:\n<pre>{account_address}</pre>"
-                    )
+                    await message.reply("invalid account address")
             else:
                 await message.reply("invalid format")
 
@@ -136,8 +165,6 @@ class Handlers:
                     ltv = await self.terra.ltv(account_address)
                     await message.reply(f"{ltv}%" if ltv else "no loan found")
                 else:
-                    await message.reply(
-                        f"invalid account address:\n<pre>{account_address}</pre>"
-                    )
+                    await message.reply("invalid account address")
             else:
                 await message.reply("invalid format")

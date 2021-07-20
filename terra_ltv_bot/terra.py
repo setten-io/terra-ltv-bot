@@ -3,6 +3,8 @@ import asyncio
 from terra_sdk.client.lcd.lcdclient import AsyncLCDClient
 from terra_sdk.exceptions import LCDResponseError
 
+FINDER_URL = "https://finder.terra.money/"
+
 
 class Terra:
     def __init__(
