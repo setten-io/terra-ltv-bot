@@ -10,6 +10,7 @@ from .config import Config
 from .handlers import Handlers
 from .models import all_models
 from .tasks import Tasks
+from .terra import Terra
 
 
 class Bot:
@@ -17,7 +18,14 @@ class Bot:
         self.dp = Dispatcher(
             TelegramBot(token=config.bot_token, parse_mode=types.ParseMode.MARKDOWN_V2)
         )
-        self.lcd = AsyncLCDClient(url=config.lcd_url, chain_id=config.chain_id)
+
+        self.terra = Terra(
+            AsyncLCDClient(url=config.lcd_url, chain_id=config.chain_id),
+            anchor_market_contract="terra1sepfj7s0aeg5967uxnfk4thzlerrsktkpelm5s",
+            # anchor_market_contract="terra15dwd5mj8v59wpj0wvt233mf5efdff808c5tkal",
+            anchor_overseer_contract="terra1tmnqgvg567ypvsvk6rwsga3srp7e3lg6u0elp8",
+            # anchor_overseer_contract="terra1qljxd0y3j3gk97025qvl3lgq8ygup4gsksvaxv",
+        )
         self.db = motor.motor_asyncio.AsyncIOMotorClient().ltv
 
     async def on_startup(self, dp: Dispatcher):
@@ -25,8 +33,8 @@ class Bot:
             database=self.db,
             document_models=all_models,
         )
-        Handlers(dp, self.lcd)
-        Tasks(dp, self.lcd)
+        Handlers(dp, self.terra)
+        Tasks(dp, self.terra)
 
     async def on_shutdown(self, dp: Dispatcher):
         pass

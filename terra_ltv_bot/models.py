@@ -1,46 +1,29 @@
 from beanie import Document, Indexed
 from pydantic import validator
 
+from .utils import is_account_address
 
-class Account(Document):
-    telegram_id: Indexed(int, unique=True)  # type: ignore
-    balances: dict[str, int] = {}
-    games: int = 0
-    wins: int = 0
 
-    @validator("telegram_id", always=True)
-    def telegram_should_be_positive_and_not_null(cls, v: int):
-        if 0 >= v:
-            raise ValueError("should be positive")
+class Address(Document):
+    account_address: Indexed(str, unique=True)  # type: ignore
+    subscribers: list[int] = []  # telegram ids
+    is_staker: bool = False
+
+    @validator("account_address", always=True)
+    def account_address_should_be_a_terra_address(cls, v: str):
+        if not is_account_address(v):
+            raise ValueError("invalid account address")
         return v
 
     @staticmethod
-    async def get_or_create(telegram_id: int) -> "Account":
-        account = await Account.find_one(Account.telegram_id == telegram_id)
-        if not account:
-            new_account = Account(telegram_id=telegram_id)
-            await new_account.insert()
-            return new_account
+    async def get_or_create(account_address: str) -> "Address":
+        address = await Address.find_one(Address.account_address == account_address)
+        if not address:
+            new_address = Address(account_address=account_address)
+            await new_address.insert()
+            return new_address
         else:
-            return account
-
-    def get_active_balances(self) -> dict[str, int]:
-        return {denom: amount for denom, amount in self.balances.items() if amount > 0}
+            return address
 
 
-class Crawler(Document):
-    chain_id: Indexed(str, unique=True)  # type: ignore
-    height: int
-
-    @staticmethod
-    async def get_or_create(chain_id: str, height: int) -> "Crawler":
-        crawler = await Crawler.find_one(Crawler.chain_id == chain_id)
-        if not crawler:
-            new_crawler = Crawler(chain_id=chain_id, height=height)
-            await new_crawler.insert()
-            return new_crawler
-        else:
-            return crawler
-
-
-all_models = [Account, Crawler]
+all_models = [Address]
