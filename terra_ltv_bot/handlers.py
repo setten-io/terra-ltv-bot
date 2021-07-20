@@ -28,7 +28,10 @@ class Handlers:
         await message.reply(
             "Terra LTV bot lets you subscribe to Terra addresses and receive "
             "alerts when they are close to liquidation on a spcific protocol.\n"
-            "Currently only supports Anchor loans.\n"
+            "\n"
+            "Supported protocols:\n"
+            " - <a href='https://anchorprotocol.com'>Anchor</a> borrow "
+            "(threshold: 35%)\n"
             "\n"
             "/help\nDisplay this message.\n\n"
             "/subscribe account_address\nSubscribe to an address LTV alerts.\n\n"
