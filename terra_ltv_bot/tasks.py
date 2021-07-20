@@ -72,7 +72,7 @@ class Tasks:
         if not self.alerted.get(key):
             await self.bot.send_message(
                 telegram_id,
-                f"🚨 LTV is unsafe ({ltv}%) for:\n<pre>{account_address}</pre>",
+                f"🚨 {ltv}% LTV ratio:\n<pre>{account_address}</pre>",
             )
             self.alerted.set(key, True)
             log.info(f"{account_address} {telegram_id} notified")

@@ -20,10 +20,8 @@ class Bot:
         self.dp = Dispatcher(self.bot, storage=MemoryStorage())
         self.terra = Terra(
             AsyncLCDClient(url=config.lcd_url, chain_id=config.chain_id),
-            anchor_market_contract="terra1sepfj7s0aeg5967uxnfk4thzlerrsktkpelm5s",
-            # anchor_market_contract="terra15dwd5mj8v59wpj0wvt233mf5efdff808c5tkal",
-            anchor_overseer_contract="terra1tmnqgvg567ypvsvk6rwsga3srp7e3lg6u0elp8",
-            # anchor_overseer_contract="terra1qljxd0y3j3gk97025qvl3lgq8ygup4gsksvaxv",
+            anchor_market_contract=config.anchor_market_contract,
+            anchor_overseer_contract=config.anchor_overseer_contract,
         )
         self.db = motor.motor_asyncio.AsyncIOMotorClient().ltv
 

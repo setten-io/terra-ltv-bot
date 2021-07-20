@@ -1,6 +1,7 @@
 import asyncio
 
 from terra_sdk.client.lcd.lcdclient import AsyncLCDClient
+from terra_sdk.exceptions import LCDResponseError
 
 
 class Terra:
@@ -31,3 +32,15 @@ class Terra:
             return round(((borrowed * 100) / limit) / 2, 2)
         else:
             return 0
+
+    async def is_staking(self, account_address: str, validator_address: str) -> bool:
+        try:
+            delegations = await self.lcd.staking.delegations(
+                account_address, validator_address
+            )
+            if delegations and delegations[0].balance.amount > 0:
+                return True
+            else:
+                return False
+        except LCDResponseError:
+            return False
