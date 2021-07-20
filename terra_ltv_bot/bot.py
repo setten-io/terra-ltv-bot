@@ -2,6 +2,7 @@ import motor
 from aiogram import Bot as TelegramBot
 from aiogram import types
 from aiogram.dispatcher import Dispatcher
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.utils import executor
 from beanie import init_beanie
 from terra_sdk.client.lcd.lcdclient import AsyncLCDClient
@@ -18,7 +19,7 @@ class Bot:
         self.bot = TelegramBot(
             token=config.bot_token, parse_mode=types.ParseMode.MARKDOWN_V2
         )
-        self.dp = Dispatcher(self.bot)
+        self.dp = Dispatcher(self.bot, storage=MemoryStorage())
         self.terra = Terra(
             AsyncLCDClient(url=config.lcd_url, chain_id=config.chain_id),
             anchor_market_contract="terra1sepfj7s0aeg5967uxnfk4thzlerrsktkpelm5s",

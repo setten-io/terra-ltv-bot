@@ -3,6 +3,7 @@ import logging
 
 from aiogram import types
 from aiogram.dispatcher import Dispatcher
+from aiogram.utils.exceptions import Throttled
 from beanie.operators import All
 
 from .models import Address
@@ -14,6 +15,7 @@ log = logging.getLogger(__name__)
 
 class Handlers:
     def __init__(self, dp: Dispatcher, terra: Terra) -> None:
+        self.dp = dp
         self.terra = terra
         dp.register_message_handler(self.start, commands=["start"])
         dp.register_message_handler(self.add, commands=["add"])
@@ -26,66 +28,96 @@ class Handlers:
         await message.reply("todo")
 
     async def add(self, message: types.Message) -> None:
-        log.info(f"@{message.from_user.username} {message.get_args()}")
-        account_address = message.get_args().split(" ")[0]
-        user_id = message.from_user.id
-        if account_address:
-            if is_account_address(account_address):
-                address = await Address.get_or_create(account_address)
-                if user_id in address.subscribers:
-                    await message.reply(f"already subscribed to:\n`{account_address}`")
-                else:
-                    address.subscribers.append(user_id)
-                    await address.save()
-                    await message.reply(f"subscribed to:\n`{account_address}`")
-            else:
-                await message.reply(f"invalid account address:\n`{account_address}`")
+        try:
+            await self.dp.throttle("add", rate=1)
+        except Throttled:
+            await message.reply("too many requests")
         else:
-            await message.reply("invalid format")
+            log.info(f"@{message.from_user.username} {message.get_args()}")
+            account_address = message.get_args().split(" ")[0]
+            user_id = message.from_user.id
+            if account_address:
+                if is_account_address(account_address):
+                    address = await Address.get_or_create(account_address)
+                    if user_id in address.subscribers:
+                        await message.reply(
+                            f"already subscribed to:\n`{account_address}`"
+                        )
+                    else:
+                        address.subscribers.append(user_id)
+                        await address.save()
+                        await message.reply(f"subscribed to:\n`{account_address}`")
+                else:
+                    await message.reply(
+                        f"invalid account address:\n`{account_address}`"
+                    )
+            else:
+                await message.reply("invalid format")
 
     async def list_(self, message: types.Message) -> None:
-        log.info(f"@{message.from_user.username} {message.get_args()}")
-        user_id = message.from_user.id
-        reply = ""
-        addresses = await Address.find(All(Address.subscribers, [user_id])).to_list()
-        ltvs = await asyncio.gather(
-            *[self.terra.ltv(address.account_address) for address in addresses]
-        )
-        for index, address in enumerate(addresses):
-            ltv = str(ltvs[index]).replace(".", "\.")  # noqa: W605
-            reply += f"`{address.account_address}` {ltv if ltv else '-'}%\n"
-        await message.reply(reply or "not subscribed to any address")
+        try:
+            await self.dp.throttle("add", rate=1)
+        except Throttled:
+            await message.reply("too many requests")
+        else:
+            log.info(f"@{message.from_user.username} {message.get_args()}")
+            user_id = message.from_user.id
+            reply = ""
+            addresses = await Address.find(
+                All(Address.subscribers, [user_id])
+            ).to_list()
+            ltvs = await asyncio.gather(
+                *[self.terra.ltv(address.account_address) for address in addresses]
+            )
+            for index, address in enumerate(addresses):
+                ltv = str(ltvs[index]).replace(".", "\.")  # noqa: W605
+                reply += f"`{address.account_address}` {ltv if ltv else '-'}%\n"
+            await message.reply(reply or "not subscribed to any address")
 
     async def remove(self, message: types.Message) -> None:
-        log.info(f"@{message.from_user.username} {message.get_args()}")
-        account_address = message.get_args().split(" ")[0]
-        user_id = message.from_user.id
-        if account_address:
-            if is_account_address(account_address):
-                address = await Address.get_or_create(account_address)
-                if user_id in address.subscribers:
-                    address.subscribers.remove(user_id)
-                    if not address.subscribers:
-                        await address.delete()
-                    else:
-                        await address.save()
-                    await message.reply(f"unsubscribed from:\n`{account_address}`")
-                else:
-                    await message.reply(f"not subscribed to:\n`{account_address}`")
-            else:
-                await message.reply(f"invalid account address:\n`{account_address}`")
+        try:
+            await self.dp.throttle("add", rate=1)
+        except Throttled:
+            await message.reply("too many requests")
         else:
-            await message.reply("invalid format")
+            log.info(f"@{message.from_user.username} {message.get_args()}")
+            account_address = message.get_args().split(" ")[0]
+            user_id = message.from_user.id
+            if account_address:
+                if is_account_address(account_address):
+                    address = await Address.get_or_create(account_address)
+                    if user_id in address.subscribers:
+                        address.subscribers.remove(user_id)
+                        if not address.subscribers:
+                            await address.delete()
+                        else:
+                            await address.save()
+                        await message.reply(f"unsubscribed from:\n`{account_address}`")
+                    else:
+                        await message.reply(f"not subscribed to:\n`{account_address}`")
+                else:
+                    await message.reply(
+                        f"invalid account address:\n`{account_address}`"
+                    )
+            else:
+                await message.reply("invalid format")
 
     async def ltv(self, message: types.Message) -> None:
-        log.info(f"@{message.from_user.username} {message.get_args()}")
-        account_address = message.get_args().split(" ")[0]
-        if account_address:
-            if is_account_address(account_address):
-                ltv = await self.terra.ltv(account_address)
-                ltv_formated = str(ltv).replace(".", "\.")  # noqa: W605
-                await message.reply(f"{ltv_formated}%" if ltv else "no loan found")
-            else:
-                await message.reply(f"invalid account address:\n`{account_address}`")
+        try:
+            await self.dp.throttle("add", rate=1)
+        except Throttled:
+            await message.reply("too many requests")
         else:
-            await message.reply("invalid format")
+            log.info(f"@{message.from_user.username} {message.get_args()}")
+            account_address = message.get_args().split(" ")[0]
+            if account_address:
+                if is_account_address(account_address):
+                    ltv = await self.terra.ltv(account_address)
+                    ltv_formated = str(ltv).replace(".", "\.")  # noqa: W605
+                    await message.reply(f"{ltv_formated}%" if ltv else "no loan found")
+                else:
+                    await message.reply(
+                        f"invalid account address:\n`{account_address}`"
+                    )
+            else:
+                await message.reply("invalid format")
