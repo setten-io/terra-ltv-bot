@@ -86,7 +86,9 @@ class Handlers:
             )
             for index, address in enumerate(addresses):
                 ltv = str(ltvs[index])
-                reply += f"<pre>{address.account_address}<pre> {ltv if ltv else '-'}%\n"
+                reply += (
+                    f"<pre>{address.account_address}</pre> {ltv if ltv else '-'}%\n"
+                )
             await message.reply(reply or "not subscribed to any address")
 
     async def unsubscribe(self, message: types.Message) -> None:

@@ -74,7 +74,7 @@ class Tasks:
                 telegram_id,
                 f"🚨 {ltv}% LTV ratio:\n<pre>{account_address}</pre>",
             )
-            await self.redis.set(key, int(True), ex=timedelta(hours=2))
+            await self.redis.set(key, int(True), ex=timedelta(hours=1))
             log.info(f"{account_address} {telegram_id} notified")
         else:
             log.debug(f"{account_address} {telegram_id} muted")
