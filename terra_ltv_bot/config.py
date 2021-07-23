@@ -30,7 +30,7 @@ class Config:
     @classmethod
     def from_env(cls) -> "Config":
         return cls(
-            bool(os.getenv("BOT_TOKEN")),
+            bool(os.getenv("DEBUG")),
             os.environ["BOT_TOKEN"],
             os.getenv("DB_HOST", "localhost"),
             int(os.getenv("DB_PORT", "27017")),
