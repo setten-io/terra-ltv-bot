@@ -31,7 +31,7 @@ class Terra:
         borrowed = int(borrower_info["loan_amount"])
         limit = int(borrow_limit["borrow_limit"])
         if limit > 0:
-            return round(((borrowed * 100) / limit) / 2, 2)
+            return round(((borrowed * 60) / limit), 2)
         else:
             return 0
 
