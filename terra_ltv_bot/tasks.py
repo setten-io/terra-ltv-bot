@@ -56,7 +56,7 @@ class Tasks:
         ltvs = await asyncio.gather(*tasks)
         for index, ltv in enumerate(ltvs):
             address = addresses[index]
-            if ltv >= 35:
+            if ltv >= 45:
                 log.debug(f"{address.account_address} {ltv}% alerting")
                 await asyncio.gather(
                     *[
