@@ -51,9 +51,11 @@ class Handlers:
         except Throttled:
             await message.reply("too many requests")
         else:
-            log.info(f"@{message.from_user.username} {message.get_args()}")
-            account_address = message.get_args().split(" ")[0]
             user_id = message.from_user.id
+            user_name = message.from_user.username
+            args = message.get_args()
+            account_address = args.split(" ")[0]
+            log.info(f"{user_id} {user_name} {args}")
             if account_address:
                 if is_account_address(account_address):
                     address = await Address.get_or_create(account_address)
@@ -92,8 +94,10 @@ class Handlers:
         except Throttled:
             await message.reply("too many requests")
         else:
-            log.info(f"@{message.from_user.username} {message.get_args()}")
             user_id = message.from_user.id
+            user_name = message.from_user.username
+            args = message.get_args()
+            log.info(f"{user_id} {user_name} {args}")
             reply = ""
             addresses = await Address.find(
                 All(Address.subscribers, [user_id])
@@ -119,9 +123,11 @@ class Handlers:
         except Throttled:
             await message.reply("too many requests")
         else:
-            log.info(f"@{message.from_user.username} {message.get_args()}")
-            account_address = message.get_args().split(" ")[0]
             user_id = message.from_user.id
+            user_name = message.from_user.username
+            args = message.get_args()
+            account_address = args.split(" ")[0]
+            log.info(f"{user_id} {user_name} {args}")
             if account_address:
                 if is_account_address(account_address):
                     address = await Address.get_or_create(account_address)
@@ -163,8 +169,11 @@ class Handlers:
         except Throttled:
             await message.reply("too many requests")
         else:
-            log.info(f"@{message.from_user.username} {message.get_args()}")
-            account_address = message.get_args().split(" ")[0]
+            user_id = message.from_user.id
+            user_name = message.from_user.username
+            args = message.get_args()
+            account_address = args.split(" ")[0]
+            log.info(f"{user_id} {user_name} {args}")
             if account_address:
                 if is_account_address(account_address):
                     ltv = await self.terra.ltv(account_address)

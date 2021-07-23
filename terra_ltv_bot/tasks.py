@@ -57,7 +57,7 @@ class Tasks:
         for index, ltv in enumerate(ltvs):
             address = addresses[index]
             if ltv >= 45:
-                log.debug(f"{address.account_address} {ltv}% alerting")
+                log.debug(f"{address.account_address} {ltv} alerting")
                 await asyncio.gather(
                     *[
                         self.notify(address.account_address, subscriber, ltv)
@@ -65,7 +65,7 @@ class Tasks:
                     ]
                 )
             else:
-                log.debug(f"{address.account_address} {ltv}% not alerting")
+                log.debug(f"{address.account_address} {ltv} ok")
 
     async def notify(self, account_address: str, telegram_id: int, ltv: float) -> None:
         key = f"{account_address}:{telegram_id}"
@@ -75,6 +75,6 @@ class Tasks:
                 f"🚨 {ltv}% LTV ratio:\n<pre>{account_address}</pre>",
             )
             await self.redis.set(key, int(True), ex=timedelta(hours=1))
-            log.info(f"{account_address} {telegram_id} notified")
+            log.info(f"{account_address} {telegram_id} {ltv}")
         else:
-            log.debug(f"{account_address} {telegram_id} muted")
+            log.debug(f"{account_address} {telegram_id} {ltv} muted")
