@@ -26,7 +26,7 @@ class Bot:
         )
         self.db = motor.motor_asyncio.AsyncIOMotorClient(
             host=config.db_host, port=config.db_port
-        ).ltv
+        )[config.db_name]
         self.redis = aioredis.from_url(config.redis_url)
 
     async def on_startup(self, dp: Dispatcher):
@@ -37,7 +37,7 @@ class Bot:
         Handlers(dp, self.terra)
         Tasks(dp, self.bot, self.terra, self.redis)
 
-    async def on_shutdown(self, dp: Dispatcher):
+    async def on_shutdown(self, _: Dispatcher):
         pass
 
     def run(self) -> None:

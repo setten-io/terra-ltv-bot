@@ -8,7 +8,7 @@ from aiogram import Bot
 from aiogram.dispatcher import Dispatcher
 from aioredis import Redis
 
-from .models import Address
+from .models import Address, Subscription
 from .terra import Terra
 
 log = logging.getLogger(__name__)
@@ -49,32 +49,31 @@ class Tasks:
     @skip_exceptions
     async def check_ltv_ratio(self) -> None:
         log.debug("checking ltv ratios")
+        addresses: dict[str, Address] = {}
+        async for address in Address.find_all():
+            addresses[str(address.id)] = address
         tasks = []
-        addresses = await Address.find_all().to_list()
-        for result in addresses:
-            tasks.append(asyncio.create_task(self.terra.ltv(result.account_address)))
+        for address in addresses.values():
+            tasks.append(asyncio.create_task(self.terra.ltv(address.account_address)))
         ltvs = await asyncio.gather(*tasks)
-        for index, ltv in enumerate(ltvs):
-            address = addresses[index]
-            if ltv >= 45:
-                log.debug(f"{address.account_address} {ltv} alerting")
-                await asyncio.gather(
-                    *[
-                        self.notify(address.account_address, subscriber, ltv)
-                        for subscriber in address.subscribers
-                    ]
+        addresses_id_to_ltv = dict(
+            zip([address.id for address in addresses.values()], ltvs)
+        )
+        async for subscription in Subscription.find_all():
+            address_id = str(subscription.address_id)
+            account_address = addresses[address_id].account_address
+            ltv = addresses_id_to_ltv[subscription.address_id]
+            cache_key = f"{account_address}:anchor:{subscription.telegram_id}"
+            if subscription.alert_threshold <= ltv and not await self.redis.get(
+                cache_key
+            ):
+                await self.bot.send_message(
+                    subscription.telegram_id,
+                    f"🚨 anchor LTV ratio is at {ltv}%:\n<pre>{account_address}</pre>",
                 )
+                log.info(f"{account_address} {subscription.telegram_id} {ltv}")
+                await self.redis.set(cache_key, 1, ex=timedelta(hours=1))
+            elif subscription.alert_threshold <= ltv:
+                log.debug(f"{account_address} {subscription.telegram_id} {ltv} muted")
             else:
-                log.debug(f"{address.account_address} {ltv} ok")
-
-    async def notify(self, account_address: str, telegram_id: int, ltv: float) -> None:
-        key = f"{account_address}:{telegram_id}"
-        if not await self.redis.get(key):
-            await self.bot.send_message(
-                telegram_id,
-                f"🚨 {ltv}% LTV ratio:\n<pre>{account_address}</pre>",
-            )
-            await self.redis.set(key, int(True), ex=timedelta(hours=1))
-            log.info(f"{account_address} {telegram_id} {ltv}")
-        else:
-            log.debug(f"{account_address} {telegram_id} {ltv} muted")
+                log.debug(f"{account_address} {ltv} ok")
