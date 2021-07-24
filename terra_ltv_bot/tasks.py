@@ -46,7 +46,7 @@ class Tasks:
         dp._loop_create_task(self.check_ltv_ratio())
 
     @every(5 * 60)
-    # @skip_exceptions
+    @skip_exceptions
     async def check_ltv_ratio(self) -> None:
         log.debug("checking ltv ratios")
         addresses: dict[str, Address] = {}
@@ -73,7 +73,7 @@ class Tasks:
                         f"<pre>{account_address}</pre>"
                     ),
                 )
-                log.info(f"{account_address} {subscription.telegram_id} {ltv}")
+                log.info(f"{account_address} {subscription.telegram_id} {ltv} alerted")
                 await self.redis.set(cache_key, 1, ex=timedelta(hours=1))
             elif threshold <= ltv:
                 log.debug(f"{account_address} {subscription.telegram_id} {ltv} muted")
