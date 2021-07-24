@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional
 
 from beanie import Document, Indexed
 from beanie.odm.fields import PydanticObjectId
@@ -22,7 +22,7 @@ class Address(Document):
 class Subscription(Document):
     address_id: PydanticObjectId
     protocol: str
-    alert_threshold: int
+    alert_threshold: Optional[int]
     telegram_id: int
 
     class Collection:
@@ -38,7 +38,9 @@ class Subscription(Document):
         ]
 
     @validator("alert_threshold", always=True)
-    def alert_threshold_is_percentage(cls, v: Any) -> int:
+    def alert_threshold_is_percentage(cls, v: Any) -> Optional[int]:
+        if v is None:
+            return v
         try:
             threshold = int(v)
         except ValueError:

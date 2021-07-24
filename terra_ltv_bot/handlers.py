@@ -87,7 +87,7 @@ class Handlers:
                         subscription = Subscription(
                             address_id=address.id,
                             protocol="anchor",
-                            alert_threshold=alert_threshold or 45,
+                            alert_threshold=alert_threshold,
                             telegram_id=user_id,
                         )
                     await subscription.save()
@@ -146,13 +146,14 @@ class Handlers:
                 )
                 subscription = subscriptions[index]
                 ltv = ltvs[index]
+                threshold = subscription.alert_threshold or 45
                 reply += "{} <a href='{}'>{}...{}</a> {}/{}%\n".format(
-                    "🔴" if ltvs[index] >= subscription.alert_threshold else "🟢",
+                    "🔴" if ltv >= threshold else "🟢",
                     url,
                     address.account_address[:13],
                     address.account_address[-5:],
                     ltv,
-                    subscription.alert_threshold,
+                    threshold,
                 )
             await message.reply(reply or "not subscribed to any address")
 
