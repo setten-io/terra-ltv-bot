@@ -11,16 +11,18 @@ Requires:
 
 ### Configuration
 
-| envvar                   | type | default               | description                     |
-|--------------------------|------|-----------------------|---------------------------------|
-| BOT_TOKEN                | str  | -                     | Telegram bot token              |
-| DB_HOST                  | str  | `"localhost"`         | Mongo database host             |
-| DB_PORT                  | int  | `27017`               | Mongo port host                 |
-| REDIS_URL                | str  | `"redis://localhost"` | Redis url connexion string      |
-| LCD_URL                  | str  | -                     | Terra lcd url                   |
-| CHAIN_ID                 | str  | -                     | Terra chaind id                 |
-| ANCHOR_MARKET_CONTRACT   | str  | -                     | Anchor market contract address  |
-| ANCHOR_OVERSEER_CONTRACT | str  | -                     | Anchor overseer contact address |
+| envvar                   | required | default             | description                     |
+|--------------------------|----------|---------------------|---------------------------------|
+| BOT_TOKEN                | Yes      | -                   | Telegram bot token              |
+| LCD_URL                  | Yes      | -                   | Terra lcd url                   |
+| CHAIN_ID                 | Yes      | -                   | Terra chaind id                 |
+| ANCHOR_MARKET_CONTRACT   | Yes      | -                   | Anchor market contract address  |
+| ANCHOR_OVERSEER_CONTRACT | Yes      | -                   | Anchor overseer contact address |
+| DEBUG                    | No       | -                   | Telegram bot token              |
+| DB_NAME                  | No       | `ltv`               | Mongo database host             |
+| DB_HOST                  | No       | `localhost`         | Mongo database host             |
+| DB_PORT                  | No       | `27017`             | Mongo port host                 |
+| REDIS_URL                | No       | `redis://localhost` | Redis url connexion Yesing      |
 
 ### Run
 
