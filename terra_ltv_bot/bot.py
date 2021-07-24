@@ -26,7 +26,7 @@ class Bot:
         )
         self.db = motor.motor_asyncio.AsyncIOMotorClient(
             host=config.db_host, port=config.db_port
-        ).ltv
+        )[config.db_name]
         self.redis = aioredis.from_url(config.redis_url)
 
     async def on_startup(self, dp: Dispatcher):

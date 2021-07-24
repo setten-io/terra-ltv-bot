@@ -7,6 +7,7 @@ class Config:
         self,
         debug: bool,
         bot_token: str,
+        db_name: str,
         db_host: str,
         db_port: int,
         redis_url: str,
@@ -18,6 +19,7 @@ class Config:
     ) -> None:
         self.debug = debug
         self.bot_token = bot_token
+        self.db_name = db_name
         self.db_host = db_host
         self.db_port = db_port
         self.redis_url = redis_url
@@ -32,6 +34,7 @@ class Config:
         return cls(
             bool(os.getenv("DEBUG")),
             os.environ["BOT_TOKEN"],
+            os.getenv("DB_NAME", "ltv"),
             os.getenv("DB_HOST", "localhost"),
             int(os.getenv("DB_PORT", "27017")),
             os.getenv("REDIS_URL", "redis://localhost"),
