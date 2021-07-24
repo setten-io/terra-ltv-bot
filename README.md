@@ -18,8 +18,8 @@ Requires:
 | CHAIN_ID                 | Yes      | -                   | Terra chaind id                 |
 | ANCHOR_MARKET_CONTRACT   | Yes      | -                   | Anchor market contract address  |
 | ANCHOR_OVERSEER_CONTRACT | Yes      | -                   | Anchor overseer contact address |
-| DEBUG                    | No       | -                   | Telegram bot token              |
-| DB_NAME                  | No       | `ltv`               | Mongo database host             |
+| DEBUG                    | No       | -                   | Set logging to debug            |
+| DB_NAME                  | No       | `ltv`               | Mongo database name             |
 | DB_HOST                  | No       | `localhost`         | Mongo database host             |
 | DB_PORT                  | No       | `27017`             | Mongo port host                 |
 | REDIS_URL                | No       | `redis://localhost` | Redis url connexion Yesing      |
