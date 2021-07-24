@@ -25,11 +25,17 @@ class Handlers:
     async def start(self, message: types.Message) -> None:
         log.info(f"@{message.from_user.username} {message.get_args()}")
         await message.reply(
-            "Terra LTV bot lets you subscribe to Terra addresses and receive "
+            "<u>Terra LTV bot</u>\n"
+            "\n"
+            "This bot lets you subscribe to Terra addresses and receive "
             "alerts when they are close to liquidation on a spcific protocol.\n"
             "\n"
-            "Supported protocols:\n"
-            " - <a href='https://anchorprotocol.com'>Anchor</a> borrow\n"
+            "<u>Supported protocols:</u>\n"
+            "\n"
+            " - <a href='https://anchorprotocol.com'>Anchor borrow</a>, "
+            "default safe threshold: 45%\n"
+            "\n"
+            "<u>Commands:</u>\n"
             "\n"
             "/help\nDisplay this message.\n"
             "\n"
@@ -37,7 +43,8 @@ class Handlers:
             "<pre>/subscribe terra1[...] 55</pre>\n"
             "<pre>/subscribe terra1[...]</pre>\n"
             "Subscribe to an address LTV alerts.\n"
-            "In not specified, alerting threshold is 45%.\n"
+            "Whe not specified, the alert threshold defaults to "
+            "the protocol safe value.\n"
             "\n"
             "/list\nList all subscribed addresses and their current LTV.\n"
             "\n"
@@ -52,7 +59,7 @@ class Handlers:
             "made with ♥ by Terra validator "
             "<a href='https://terra.setten.io/'>setten.io</a>"
             " - "
-            "<a href='https://github.com/setten-io/terra-ltv-bot'>source</a>"
+            "<a href='https://github.com/setten-io/terra-ltv-bot'>project source</a>"
         )
 
     async def subscribe(self, message: types.Message) -> None:
