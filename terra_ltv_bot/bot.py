@@ -11,8 +11,7 @@ from terra_sdk.client.lcd.lcdclient import AsyncLCDClient
 from .config import Config
 from .handlers import Handlers
 from .models import all_models
-
-# from .tasks import Tasks
+from .tasks import Tasks
 from .terra import Terra
 
 
@@ -36,9 +35,9 @@ class Bot:
             document_models=all_models,
         )
         Handlers(dp, self.terra)
-        # Tasks(dp, self.bot, self.terra, self.redis)
+        Tasks(dp, self.bot, self.terra, self.redis)
 
-    async def on_shutdown(self, dp: Dispatcher):
+    async def on_shutdown(self, _: Dispatcher):
         pass
 
     def run(self) -> None:

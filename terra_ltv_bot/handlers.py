@@ -29,15 +29,26 @@ class Handlers:
             "alerts when they are close to liquidation on a spcific protocol.\n"
             "\n"
             "Supported protocols:\n"
-            " - <a href='https://anchorprotocol.com'>Anchor</a> borrow "
-            "(threshold: 35%)\n"
+            " - <a href='https://anchorprotocol.com'>Anchor</a> borrow\n"
             "\n"
-            "/help\nDisplay this message.\n\n"
-            "/subscribe account_address\nSubscribe to an address LTV alerts.\n\n"
-            "/list\nList all subscribed addresses and their current LTV.\n\n"
-            "/unsubscribe account_address\nUnsubscribe to an address LTV alerts.\n\n"
-            "/ltv account_address\nRetreive LTV for an arbitrary address."
-            "\n\n"
+            "/help\nDisplay this message.\n"
+            "\n"
+            "/subscribe address (threshold)\n"
+            "<pre>/subscribe terra1[...] 55</pre>\n"
+            "<pre>/subscribe terra1[...]</pre>\n"
+            "Subscribe to an address LTV alerts.\n"
+            "In not specified, alerting threshold is 45%.\n"
+            "\n"
+            "/list\nList all subscribed addresses and their current LTV.\n"
+            "\n"
+            "/unsubscribe address\n"
+            "<pre>/unsubscribe terra1[...]</pre>\n"
+            "Unsubscribe from an address LTV alerts.\n"
+            "\n"
+            "/ltv address\n"
+            "<pre>/ltv terra1[...]</pre>\n"
+            "Retreive LTV for an arbitrary address.\n"
+            "\n"
             "made with ♥ by Terra validator "
             "<a href='https://terra.setten.io/'>setten.io</a>"
             " - "
@@ -91,11 +102,7 @@ class Handlers:
                         )
                     )
                 except ValueError:
-                    await message.reply(
-                        "incorrect format, use:\n"
-                        "<pre>/subscribe account_address "
-                        "alert_threshold(optional, default=45)</pre>"
-                    )
+                    await message.reply("invalid parameters")
                 except DuplicateKeyError:
                     await message.reply(
                         "already subscribed to "
@@ -120,25 +127,32 @@ class Handlers:
             user_name = message.from_user.username
             args = message.get_args().split(" ")
             log.info(f"{user_id} {user_name} {args}")
+            subscriptions = await Subscription.find(
+                Subscription.telegram_id == user_id
+            ).to_list()
             addresses = [
                 await Address.get(subscription.address_id)
-                async for subscription in Subscription.find(
-                    Subscription.telegram_id == user_id
-                )
+                for subscription in subscriptions
             ]
             ltvs = await asyncio.gather(
                 *[self.terra.ltv(address.account_address) for address in addresses]
             )
             reply = ""
             for index, address in enumerate(addresses):
-                ltv = str(ltvs[index])
-                reply += "<a href='{}{}/address/{}'>{}...{}</a> {}%\n".format(
+                url = "{}{}/address/{}".format(
                     FINDER_URL,
                     self.terra.lcd.chain_id,
                     address.account_address,
+                )
+                subscription = subscriptions[index]
+                ltv = ltvs[index]
+                reply += "{} <a href='{}'>{}...{}</a> {}/{}%\n".format(
+                    "🔴" if ltvs[index] >= subscription.alert_threshold else "🟢",
+                    url,
                     address.account_address[:13],
                     address.account_address[-5:],
-                    ltv if ltv else "-",
+                    ltv,
+                    subscription.alert_threshold,
                 )
             await message.reply(reply or "not subscribed to any address")
 
