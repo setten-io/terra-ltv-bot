@@ -1,12 +1,15 @@
-from beanie import Document, Indexed
-from pydantic import validator
+from typing import Any
 
-from .utils import is_account_address
+from beanie import Document, Indexed
+from beanie.odm.fields import PydanticObjectId
+from pydantic import validator
+from pymongo import ASCENDING, IndexModel
+
+from .terra import is_account_address
 
 
 class Address(Document):
     account_address: Indexed(str, unique=True)  # type: ignore
-    subscribers: list[int] = []  # telegram ids
     is_staker: bool = False
 
     @validator("account_address", always=True)
@@ -15,15 +18,34 @@ class Address(Document):
             raise ValueError("invalid account address")
         return v
 
-    @staticmethod
-    async def get_or_create(account_address: str) -> "Address":
-        address = await Address.find_one(Address.account_address == account_address)
-        if not address:
-            new_address = Address(account_address=account_address)
-            await new_address.insert()
-            return new_address
-        else:
-            return address
+
+class Subscription(Document):
+    address_id: PydanticObjectId
+    protocol: str
+    alert_threshold: int
+    telegram_id: int
+
+    class Collection:
+        indexes = [
+            IndexModel(
+                [
+                    ("address_id", ASCENDING),
+                    ("protocol", ASCENDING),
+                    ("telegram_id", ASCENDING),
+                ],
+                unique=True,
+            )
+        ]
+
+    @validator("alert_threshold", always=True)
+    def alert_threshold_is_percentage(cls, v: Any) -> int:
+        try:
+            threshold = int(v)
+        except ValueError:
+            raise ValueError("alert threshold is not a number")
+        if not 0 <= threshold <= 100:
+            raise ValueError("alert threshold is not a percentage")
+        return threshold
 
 
-all_models = [Address]
+all_models = [Address, Subscription]

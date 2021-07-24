@@ -1,7 +1,7 @@
 import logging
 
-from . import __version__ as version
 from . import __name__ as __root_name__
+from . import __version__ as version
 from .bot import Bot
 from .config import Config
 

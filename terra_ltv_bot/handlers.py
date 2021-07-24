@@ -4,11 +4,10 @@ import logging
 from aiogram import types
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils.exceptions import Throttled
-from beanie.operators import All
+from pymongo.errors import DuplicateKeyError
 
-from .models import Address
+from .models import Address, Subscription
 from .terra import FINDER_URL, Terra
-from .utils import is_account_address
 
 log = logging.getLogger(__name__)
 
@@ -53,38 +52,61 @@ class Handlers:
         else:
             user_id = message.from_user.id
             user_name = message.from_user.username
-            args = message.get_args()
-            account_address = args.split(" ")[0]
+            args = message.get_args().split(" ")
+            account_address = args[0] if 0 < len(args) else None
+            alert_threshold = args[1] if 1 < len(args) else None
             log.info(f"{user_id} {user_name} {args}")
             if account_address:
-                if is_account_address(account_address):
-                    address = await Address.get_or_create(account_address)
-                    if user_id in address.subscribers:
-                        await message.reply(
-                            "already subscribed to "
-                            "<a href='{}{}/address/{}'>{}...{}</a>".format(
-                                FINDER_URL,
-                                self.terra.lcd.chain_id,
-                                address.account_address,
-                                address.account_address[:13],
-                                address.account_address[-5:],
-                            )
-                        )
+                try:
+                    address = await Address.find_one(
+                        Address.account_address == account_address
+                    )
+                    if not address:
+                        address = Address(account_address=account_address)
+                        await address.insert()
+                    subscription = await Subscription.find_one(
+                        Subscription.address_id == address.id,
+                        Subscription.protocol == "anchor",
+                        Subscription.telegram_id == user_id,
+                    )
+                    if subscription:
+                        if alert_threshold != subscription.alert_threshold:
+                            subscription.alert_threshold = alert_threshold
                     else:
-                        address.subscribers.append(user_id)
-                        await address.save()
-                        await message.reply(
-                            "subscribed to "
-                            "<a href='{}{}/address/{}'>{}...{}</a>".format(
-                                FINDER_URL,
-                                self.terra.lcd.chain_id,
-                                address.account_address,
-                                address.account_address[:13],
-                                address.account_address[-5:],
-                            )
+                        subscription = Subscription(
+                            address_id=address.id,
+                            protocol="anchor",
+                            alert_threshold=alert_threshold or 45,
+                            telegram_id=user_id,
                         )
-                else:
-                    await message.reply("invalid account address")
+                    await subscription.save()
+                    await message.reply(
+                        "subscribed to "
+                        "<a href='{}{}/address/{}'>{}...{}</a>".format(
+                            FINDER_URL,
+                            self.terra.lcd.chain_id,
+                            address.account_address,
+                            address.account_address[:13],
+                            address.account_address[-5:],
+                        )
+                    )
+                except ValueError:
+                    await message.reply(
+                        "incorrect format, use:\n"
+                        "<pre>/subscribe account_address "
+                        "alert_threshold(optional, default=45)</pre>"
+                    )
+                except DuplicateKeyError:
+                    await message.reply(
+                        "already subscribed to "
+                        "<a href='{}{}/address/{}'>{}...{}</a>".format(
+                            FINDER_URL,
+                            self.terra.lcd.chain_id,
+                            address.account_address,
+                            address.account_address[:13],
+                            address.account_address[-5:],
+                        )
+                    )
             else:
                 await message.reply("invalid format, missing account address")
 
@@ -96,15 +118,18 @@ class Handlers:
         else:
             user_id = message.from_user.id
             user_name = message.from_user.username
-            args = message.get_args()
+            args = message.get_args().split(" ")
             log.info(f"{user_id} {user_name} {args}")
-            reply = ""
-            addresses = await Address.find(
-                All(Address.subscribers, [user_id])
-            ).to_list()
+            addresses = [
+                await Address.get(subscription.address_id)
+                async for subscription in Subscription.find(
+                    Subscription.telegram_id == user_id
+                )
+            ]
             ltvs = await asyncio.gather(
                 *[self.terra.ltv(address.account_address) for address in addresses]
             )
+            reply = ""
             for index, address in enumerate(addresses):
                 ltv = str(ltvs[index])
                 reply += "<a href='{}{}/address/{}'>{}...{}</a> {}%\n".format(
@@ -125,41 +150,36 @@ class Handlers:
         else:
             user_id = message.from_user.id
             user_name = message.from_user.username
-            args = message.get_args()
-            account_address = args.split(" ")[0]
+            args = message.get_args().split(" ")
+            account_address = args[0] if 0 < len(args) else None
             log.info(f"{user_id} {user_name} {args}")
             if account_address:
-                if is_account_address(account_address):
-                    address = await Address.get_or_create(account_address)
-                    if user_id in address.subscribers:
-                        address.subscribers.remove(user_id)
-                        if not address.subscribers:
-                            await address.delete()
-                        else:
-                            await address.save()
-                        await message.reply(
-                            "unsubscribed from "
-                            "<a href='{}{}/address/{}'>{}...{}</a>".format(
-                                FINDER_URL,
-                                self.terra.lcd.chain_id,
-                                address.account_address,
-                                address.account_address[:13],
-                                address.account_address[-5:],
-                            )
+                address = await Address.find_one(
+                    Address.account_address == account_address
+                )
+                subscription = (
+                    await Subscription.find_one(
+                        Subscription.address_id == address.id,
+                        Subscription.protocol == "anchor",
+                        Subscription.telegram_id == user_id,
+                    )
+                    if address
+                    else None
+                )
+                if subscription:
+                    await subscription.delete()
+                    await message.reply(
+                        "unsubscribed from "
+                        "<a href='{}{}/address/{}'>{}...{}</a>".format(
+                            FINDER_URL,
+                            self.terra.lcd.chain_id,
+                            address.account_address,
+                            address.account_address[:13],
+                            address.account_address[-5:],
                         )
-                    else:
-                        await message.reply(
-                            "not subscribed to "
-                            "<a href='{}{}/address/{}'>{}...{}</a>".format(
-                                FINDER_URL,
-                                self.terra.lcd.chain_id,
-                                address.account_address,
-                                address.account_address[:13],
-                                address.account_address[-5:],
-                            )
-                        )
+                    )
                 else:
-                    await message.reply("invalid account address")
+                    await message.reply("subscription not found")
             else:
                 await message.reply("invalid format, missing account address")
 
@@ -171,14 +191,11 @@ class Handlers:
         else:
             user_id = message.from_user.id
             user_name = message.from_user.username
-            args = message.get_args()
-            account_address = args.split(" ")[0]
+            args = message.get_args().split(" ")
+            account_address = args[0] if 0 < len(args) else None
             log.info(f"{user_id} {user_name} {args}")
             if account_address:
-                if is_account_address(account_address):
-                    ltv = await self.terra.ltv(account_address)
-                    await message.reply(f"{ltv}%" if ltv else "no loan found")
-                else:
-                    await message.reply("invalid account address")
+                ltv = await self.terra.ltv(account_address)
+                await message.reply(f"{ltv}%" if ltv else "no loan found")
             else:
                 await message.reply("invalid format, missing account address")
