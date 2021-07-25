@@ -22,7 +22,7 @@ class Address(Document):
 class Subscription(Document):
     address_id: PydanticObjectId
     protocol: str
-    alert_threshold: Optional[int]
+    alert_threshold: Optional[float]
     telegram_id: int
 
     class Collection:
@@ -38,13 +38,13 @@ class Subscription(Document):
         ]
 
     @validator("alert_threshold", always=True)
-    def alert_threshold_is_percentage(cls, v: Any) -> Optional[int]:
+    def alert_threshold_is_percentage(cls, v: Any) -> Optional[float]:
         if v is None:
             return v
         try:
-            threshold = int(v)
+            threshold = float(v)
         except ValueError:
-            raise ValueError("alert threshold is not a number")
+            raise ValueError("alert threshold is not a float")
         if not 0 <= threshold <= 100:
             raise ValueError("alert threshold is not a percentage")
         return threshold
