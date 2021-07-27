@@ -6,6 +6,7 @@ from typing import Callable
 
 from aiogram import Bot
 from aiogram.dispatcher import Dispatcher
+from aiogram.utils.exceptions import TelegramAPIError
 from aioredis import Redis
 
 from .models import Address, Subscription
@@ -66,15 +67,23 @@ class Tasks:
             threshold = subscription.alert_threshold or 45
             cache_key = f"{account_address}:anchor:{subscription.telegram_id}"
             if threshold <= ltv and not await self.redis.get(cache_key):
-                await self.bot.send_message(
-                    subscription.telegram_id,
-                    (
-                        f"🚨 Anchor LTV ratio is over {threshold}% ({ltv}%):\n"
-                        f"<pre>{account_address}</pre>"
-                    ),
-                )
-                log.info(f"{account_address} {subscription.telegram_id} {ltv} alerted")
-                await self.redis.set(cache_key, 1, ex=timedelta(hours=1))
+                try:
+                    await self.bot.send_message(
+                        subscription.telegram_id,
+                        (
+                            f"🚨 Anchor LTV ratio is over {threshold}% ({ltv}%):\n"
+                            f"<pre>{account_address}</pre>"
+                        ),
+                    )
+                    log.info(
+                        f"{account_address} {subscription.telegram_id} {ltv} alerted"
+                    )
+                    await self.redis.set(cache_key, 1, ex=timedelta(hours=1))
+                except TelegramAPIError as e:
+                    log.warning(
+                        f"Couldn't send alert to {subscription.telegram_id} "
+                        f"for {account_address}: {e}"
+                    )
             elif threshold <= ltv:
                 log.debug(f"{account_address} {subscription.telegram_id} {ltv} muted")
             else:
