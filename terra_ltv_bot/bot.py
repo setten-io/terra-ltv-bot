@@ -11,6 +11,7 @@ from terra_sdk.client.lcd.lcdclient import AsyncLCDClient
 from .config import Config
 from .handlers import Handlers
 from .models import all_models
+from .protocols import Anchor
 from .tasks import Tasks
 from .terra import Terra
 
@@ -19,8 +20,16 @@ class Bot:
     def __init__(self, config: Config) -> None:
         self.bot = TelegramBot(token=config.bot_token, parse_mode=types.ParseMode.HTML)
         self.dp = Dispatcher(self.bot, storage=MemoryStorage())
+        self.lcd = AsyncLCDClient(url=config.lcd_url, chain_id=config.chain_id)
+        self.protocols = dict(
+            anchor=Anchor(
+                lcd=self.lcd,
+                market_contract=config.anchor_market_contract,
+                overseer_contract=config.anchor_overseer_contract,
+            )
+        )
         self.terra = Terra(
-            AsyncLCDClient(url=config.lcd_url, chain_id=config.chain_id),
+            self.lcd,
             anchor_market_contract=config.anchor_market_contract,
             anchor_overseer_contract=config.anchor_overseer_contract,
         )
@@ -34,7 +43,7 @@ class Bot:
             database=self.db,
             document_models=all_models,
         )
-        Handlers(dp, self.terra)
+        Handlers(dp, self.protocols)
         Tasks(dp, self.bot, self.terra, self.redis)
 
     async def on_shutdown(self, _: Dispatcher):
