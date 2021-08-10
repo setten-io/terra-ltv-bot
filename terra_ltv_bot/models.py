@@ -12,6 +12,9 @@ class Address(Document):
     account_address: Indexed(str, unique=True)  # type: ignore
     is_staker: bool = False
 
+    class Config:
+        validate_assignment = True
+
     @validator("account_address", always=True)
     def account_address_should_be_a_terra_address(cls, v: str):
         if not is_account_address(v):
@@ -36,6 +39,9 @@ class Subscription(Document):
                 unique=True,
             )
         ]
+
+    class Config:
+        validate_assignment = True
 
     @validator("alert_threshold", always=True)
     def alert_threshold_is_percentage(cls, v: Any) -> Optional[float]:
