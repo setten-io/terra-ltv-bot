@@ -34,7 +34,7 @@ class Bot:
             database=self.db,
             document_models=all_models,
         )
-        Handlers(dp, self.terra)
+        Handlers(dp, self.terra, self.redis)
         Tasks(dp, self.bot, self.terra, self.redis)
 
     async def on_shutdown(self, _: Dispatcher):

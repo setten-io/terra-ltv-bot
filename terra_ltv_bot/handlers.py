@@ -4,6 +4,7 @@ import logging
 from aiogram import types
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils.exceptions import Throttled
+from aioredis import Redis
 from pymongo.errors import DuplicateKeyError
 
 from .models import Address, Subscription
@@ -13,9 +14,10 @@ log = logging.getLogger(__name__)
 
 
 class Handlers:
-    def __init__(self, dp: Dispatcher, terra: Terra) -> None:
+    def __init__(self, dp: Dispatcher, terra: Terra, redis: Redis) -> None:
         self.dp = dp
         self.terra = terra
+        self.redis = redis
         dp.register_message_handler(self.start, commands=["start", "help"])
         dp.register_message_handler(self.subscribe, commands=["subscribe"])
         dp.register_message_handler(self.list_, commands=["list"])
@@ -90,6 +92,9 @@ class Handlers:
                     if subscription:
                         if alert_threshold != subscription.alert_threshold:
                             subscription.alert_threshold = alert_threshold
+                            await self.redis.delete(
+                                f"{account_address}:anchor:{subscription.telegram_id}"
+                            )
                     else:
                         subscription = Subscription(
                             address_id=address.id,
