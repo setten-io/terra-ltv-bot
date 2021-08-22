@@ -1,9 +1,12 @@
 import asyncio
+import logging
 
 from terra_sdk.client.lcd.lcdclient import AsyncLCDClient
 from terra_sdk.exceptions import LCDResponseError
 
 FINDER_URL = "https://finder.terra.money/"
+
+log = logging.getLogger(__name__)
 
 
 def is_account_address(account_address: str) -> bool:
@@ -40,8 +43,8 @@ class Terra:
             limit = int(borrow_limit["borrow_limit"])
             if limit > 0:
                 return round(((borrowed * 60) / limit), 2)
-        except LCDResponseError:
-            pass
+        except LCDResponseError as e:
+            log.warning(f"Could not get ltv for {account_address}: {e}")
         return 0
 
     async def is_staking(self, account_address: str, validator_address: str) -> bool:
