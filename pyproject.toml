@@ -10,6 +10,7 @@ aiogram = "^2.14.3"
 terra-sdk = "^0.14.0"
 beanie = "^1.2.4"
 aioredis = "2.0.0b1"
+aiolimiter = "^1.0.0-beta.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

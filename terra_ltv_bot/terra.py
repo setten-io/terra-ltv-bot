@@ -1,6 +1,7 @@
 import asyncio
 import logging
 
+from aiolimiter import AsyncLimiter
 from terra_sdk.client.lcd.lcdclient import AsyncLCDClient
 from terra_sdk.exceptions import LCDResponseError
 
@@ -24,28 +25,30 @@ class Terra:
         anchor_overseer_contract: str,
     ) -> None:
         self.lcd = lcd
+        self.rate_limiter = AsyncLimiter(200, 10)
         self.anchor_market_contact = anchor_market_contract
         self.anchor_overseer_contact = anchor_overseer_contract
 
     async def ltv(self, account_address: str) -> float:
-        try:
-            borrower_info, borrow_limit = await asyncio.gather(
-                self.lcd.wasm.contract_query(
-                    contract_address=self.anchor_market_contact,
-                    query=dict(borrower_info=dict(borrower=account_address)),
-                ),
-                self.lcd.wasm.contract_query(
-                    contract_address=self.anchor_overseer_contact,
-                    query=dict(borrow_limit=dict(borrower=account_address)),
-                ),
-            )
-            borrowed = int(borrower_info["loan_amount"])
-            limit = int(borrow_limit["borrow_limit"])
-            if limit > 0:
-                return round(((borrowed * 60) / limit), 2)
-        except LCDResponseError as e:
-            log.warning(f"Could not get ltv for {account_address}: {e}")
-        return 0
+        async with self.rate_limiter:
+            try:
+                borrower_info, borrow_limit = await asyncio.gather(
+                    self.lcd.wasm.contract_query(
+                        contract_address=self.anchor_market_contact,
+                        query=dict(borrower_info=dict(borrower=account_address)),
+                    ),
+                    self.lcd.wasm.contract_query(
+                        contract_address=self.anchor_overseer_contact,
+                        query=dict(borrow_limit=dict(borrower=account_address)),
+                    ),
+                )
+                borrowed = int(borrower_info["loan_amount"])
+                limit = int(borrow_limit["borrow_limit"])
+                if limit > 0:
+                    return round(((borrowed * 60) / limit), 2)
+            except LCDResponseError as e:
+                log.warning(f"Could not get ltv for {account_address}: {e}")
+            return 0
 
     async def is_staking(self, account_address: str, validator_address: str) -> bool:
         try:
