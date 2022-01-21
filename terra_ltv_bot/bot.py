@@ -9,7 +9,8 @@ from beanie import init_beanie
 from terra_sdk.client.lcd.lcdclient import AsyncLCDClient
 
 from .config import Config
-from .handlers import Handlers
+
+# from .handlers import Handlers
 from .models import all_models
 from .tasks import Tasks
 from .terra import Terra
@@ -34,7 +35,7 @@ class Bot:
             database=self.db,
             document_models=all_models,
         )
-        Handlers(dp, self.terra, self.redis)
+        # Handlers(dp, self.terra, self.redis)
         Tasks(dp, self.bot, self.terra, self.redis)
 
     async def on_shutdown(self, _: Dispatcher):
