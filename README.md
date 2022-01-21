@@ -1,4 +1,7 @@
 # terra-ltv-bot
+
+⚠️ Unmaintained in favor of https://twitter.com/ArbieApp
+
 Telegram Terra LTV alerts bot
 
 ## Running in production
