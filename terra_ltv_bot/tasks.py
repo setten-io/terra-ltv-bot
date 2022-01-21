@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from functools import wraps
+from time import sleep
 from typing import Callable
 
 from aiogram import Bot
@@ -62,3 +63,4 @@ class Tasks:
                 log.info(f"{subscription.telegram_id} alerted")
             except TelegramAPIError as e:
                 log.warning(f"Couldn't send alert to {subscription.telegram_id}: {e}")
+            sleep(0.2)
